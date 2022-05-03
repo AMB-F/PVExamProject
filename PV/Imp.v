@@ -30,6 +30,14 @@ From Coq Require Import Lists.List. Import ListNotations.
 From Coq Require Import Strings.String.
 From PV Require Import Maps.
 
+
+From infotheo Require Import fdist proba.
+From mathcomp.ssreflect Require Import fintype.
+
+(0,0,0) : 
+
+(* Type (ordinal 3). <- this makes the set {0,1,2} of finType *)
+
 (* ################################################################# *)
 (** * Arithmetic and Boolean Expressions *)
 
@@ -971,6 +979,7 @@ End aevalR_extended.
     might have more structure. *)
 
 Definition state := total_map nat.
+Print total_map.
 
 (* ================================================================= *)
 (** ** Syntax  *)
@@ -1046,6 +1055,7 @@ Notation "f x .. y" := (.. (f x) .. y)
 Notation "x + y" := (APlus x y) (in custom com at level 50, left associativity).
 Notation "x - y" := (AMinus x y) (in custom com at level 50, left associativity).
 Notation "x * y" := (AMult x y) (in custom com at level 40, left associativity).
+(* TODO: fix. Notation "[ a_1 .. a_n ]" := [ a_1 .. a_n ]. *)
 Notation "'true'"  := true (at level 1).
 Notation "'true'"  := BTrue (in custom com at level 0).
 Notation "'false'"  := false (at level 1).
@@ -1152,7 +1162,7 @@ Inductive com : Type :=
   | CAsgn (x : string) (a : aexp)
   | CSeq (c1 c2 : com)
   | CIf (b : bexp) (c1 c2 : com)
-  | CWhile (b : bexp) (c : com).
+  | CSample (x : string) (as_ : list aexp).
 
 (** As for expressions, we can use a few [Notation] declarations to
     make reading and writing Imp programs more convenient. *)
@@ -1170,22 +1180,11 @@ Notation "'if' x 'then' y 'else' z 'end'" :=
          (CIf x y z)
            (in custom com at level 89, x at level 99,
             y at level 99, z at level 99) : com_scope.
-Notation "'while' x 'do' y 'end'" :=
-         (CWhile x y)
-            (in custom com at level 89, x at level 99, y at level 99) : com_scope.
+Notation "x '$=' as_" :=
+         (CSample x as_)
+           (in custom com at level 0, x constr at level 0,
+         as_ at level 85, no associativity) : com_scope.
 
-(** For example, here is the factorial function again, written as a
-    formal definition to Coq: *)
-
-Definition fact_in_coq : com :=
-  <{ Z := X;
-     Y := 1;
-     while ~(Z = 0) do
-       Y := Y * Z;
-       Z := Z - 1
-     end }>.
-
-Print fact_in_coq.
 
 (* ================================================================= *)
 (** ** Desugaring notations *)
@@ -1204,31 +1203,6 @@ Print fact_in_coq.
     These commands can also be used in the middle of a proof,
     to elaborate the current goal and context.
  *)
-
-Unset Printing Notations.
-Print fact_in_coq.
-(* ===>
-   fact_in_coq =
-   CSeq (CAsgn Z X)
-        (CSeq (CAsgn Y (S O))
-              (CWhile (BNot (BEq Z O))
-                      (CSeq (CAsgn Y (AMult Y Z))
-                            (CAsgn Z (AMinus Z (S O))))))
-        : com *)
-Set Printing Notations.
-
-Set Printing Coercions.
-Print fact_in_coq.
-(* ===>
-  fact_in_coq =
-  <{ Z := (AId X);
-     Y := (ANum 1);
-     while ~ (AId Z) = (ANum 0) do
-       Y := (AId Y) * (AId Z);
-       Z := (AId Z) - (ANum 1)
-     end }>
-       : com *)
-Unset Printing Coercions.
 
 (* ================================================================= *)
 (** ** The [Locate] command *)
@@ -1253,12 +1227,6 @@ Locate ";".
       "[ x ; y ; .. ; z ]" := cons x (cons y .. (cons z nil) ..) : list_scope
       (default interpretation) *)
 
-Locate "while".
-(* ===>
-    Notation
-      "'while' x 'do' y 'end'" := CWhile x y : com_scope (default interpretation)
-      "'_' '!->' v" := t_empty v (default interpretation)
-*)
 
 (* ----------------------------------------------------------------- *)
 (** *** Finding identifiers *)
@@ -1283,8 +1251,12 @@ Locate aexp.
 
 (** Assignment: *)
 
+
 Definition plus2 : com :=
   <{ X := X + 2 }>.
+
+Definition sample : com :=
+  <{ X $= [AId "X"; ANum 0] }>.
 
 Definition XtimesYinZ : com :=
   <{ Z := X * Y }>.
@@ -1293,26 +1265,6 @@ Definition subtract_slowly_body : com :=
   <{ Z := Z - 1 ;
      X := X - 1 }>.
 
-(* ----------------------------------------------------------------- *)
-(** *** Loops *)
-
-Definition subtract_slowly : com :=
-  <{ while ~(X = 0) do
-       subtract_slowly_body
-     end }>.
-
-Definition subtract_3_from_5_slowly : com :=
-  <{ X := 3 ;
-     Z := 5 ;
-     subtract_slowly }>.
-
-(* ----------------------------------------------------------------- *)
-(** *** An infinite loop: *)
-
-Definition loop : com :=
-  <{ while true do
-       skip
-     end }>.
 
 (* ################################################################# *)
 (** * Evaluating Commands *)
@@ -1327,7 +1279,7 @@ Definition loop : com :=
 (** Here's an attempt at defining an evaluation function for commands,
     omitting the [while] case. *)
 
-Fixpoint ceval_fun_no_while (st : state) (c : com) : state :=
+Fixpoint ceval (st : state) (c : com) : fdist state :=
   match c with
     | <{ skip }> =>
         st
@@ -1340,8 +1292,7 @@ Fixpoint ceval_fun_no_while (st : state) (c : com) : state :=
         if (beval st b)
           then ceval_fun_no_while st c1
           else ceval_fun_no_while st c2
-    | <{ while b do c end }> =>
-        st  (* bogus *)
+    | <{ x $= as_ }> => st (* bogus *)
   end.
 
 (** In a traditional functional programming language like OCaml or
