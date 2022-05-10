@@ -7,7 +7,23 @@ From Coq Require Import Arith.EqNat.
 From Coq Require Import Arith.PeanoNat. Import Nat.
 From Coq Require Import Lia.
 From PV Require Export Imp.
+From infotheo Require Import fdist proba.
+From mathcomp.ssreflect Require Import fintype.
 
+
+(*Definition state := mathcomp.ssreflect.fintype.ordinal 3.*)
+
+(*Definition finType_map (A : finType) : finType := A -> A.*)
+
+Definition state : finType := ordinal_finType 3.
+
+Check (ordinal_finType 3).
+
+Print ordinal_finType.
+
+(*Type FDist1.f1 state.
+
+Fixpoint skip s:= FDist1.f1 s.*)
 
 
 (** 
@@ -44,9 +60,7 @@ Fixpoint pow2 n :=
 
 *)
 
-fixpoint skip s := fdist1 s
-
-end.
+(*Fixpoint skip s := FDist1.f1 s*)
 
 
 (* 2022 *)
