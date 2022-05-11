@@ -238,11 +238,11 @@ Notation "'if' x 'then' y 'else' z 'end'" :=
          (CIf x y z)
            (in custom com at level 89, x at level 99,
             y at level 99, z at level 99) : com_scope.
-Notation "c1 \+ p / c2" := (CPlus p c1 c2) 
-            (in custom com at level 90, right associativity) : com_scope.
+Notation "c1 '[+' p ']' c2" := (CPlus p c1 c2) 
+            (in custom com at level 90, p at level 85, right associativity) : com_scope.
 Fixpoint sample x a1 as_ := match as_ with
   [] => (<{ x := a1 }>)
-  | (a2::as__) => CPlus (Rdiv R1 (INR (List.length as_))) <{x := a1}> (sample x a2 as__) 
+  | (a2::as__) => <{ x := a1 [+ (Rdiv R1 (INR (List.length as_)))] (sample x a2 as__) }>
   end.
 Notation "x '$=' { a1 ; a2 ; .. ; an }" := (sample x a1 (cons a2 .. (cons an nil) ..))
   (in custom com at level 0, x constr at level 0,
@@ -314,8 +314,13 @@ Locate aexp.
 Definition plus2 : com :=
   <{ X := X + 2 }>.
 
+Definition half : R := 0.5.
+
+Definition split : com :=
+  <{ skip [+ half] skip }>.
+
 Definition sampleex : com :=
-  <{ X $= {X + 0; 0 + 0} }>.
+  <{ X $= {X; 0 + 0} }>.
 
 Definition XtimesYinZ : com :=
   <{ Z := X * Y }>.
@@ -332,7 +337,7 @@ Fixpoint ceval (st : state) (c : com) :=
       FSDist1.d st
     | <{ x := a }> =>
       FSDist1.d (x !-> (aeval st a) ; st)
-    | <{ c1 \+ p / c2 }> => FSDist1.d st (* bogus *)
+    | <{ c1 [+ p ] c2 }> => FSDist1.d st (* bogus *)
     | <{ c1 ; c2 }> =>
         let st' := ceval st c1 in
         FSDistBind.d st' (fun st => ceval st c2)
