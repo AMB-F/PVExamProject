@@ -155,7 +155,7 @@ Inductive com : Type :=
   | CAsgn (x : var) (a : aexp)
   | CSeq (c1 c2 : com)
   | CIf (b : bexp) (c1 c2 : com)
-  | CPlus (p : R) (c1 c2 : com).
+  | CPlus (p : Reals_ext.Prob.t) (c1 c2 : com).
 
 
 Notation "'skip'"  :=
@@ -175,13 +175,50 @@ Notation "c1 '[+' p ']' c2" := (CPlus p c1 c2)
        (in custom com at level 90, p at level 85, right associativity) : com_scope.
 
 
+(*
+Fixpoint sample x a1 as_ := match as_ with
+  [] => (<{ x := a1 }>)
+  | (a2::as__) => <{ x := a1 [+ (Rdiv R1 (INR (List.length as_)))] (sample x a2 as__) }>
+  end.
+*)
+
+Search Reals_ext.Prob.t.
+
+(*Fixpoint sample x a1 as_ := 
+  match as_ with
+  | [] => (<{x := a1}>)
+  | (a2::as__) => <{ x := a1 [+ (Reals_ext.probdivRnnm 1 (List.length as_))] (sample x a2 as__)}>
+  end.*)
+
+(*Lemma Prob_1_Div_Gt_0 : forall (n : nat),
+  Rgt (Rdiv R1 (INR (n))) R0.
+Proof.
+intros. apply ssrR.divR_gt0.
+Admitted.*)
+
+(*Rinv_0_lt_compat: Hvis R>0 så (1/R) > 0*)
+
+
+(*Search R1. Search Rlt. Search Rgt. assert (h1: Rgt R0 R1 -> R1 = R0 -> False).
+  -- Search R1. apply Rgt_not_eq. *)
+
+(*Lemma Prob_1_Div_Lte_1 : forall (n : nat),
+  Rlt (Rdiv R1 (INR (n))) R1.
+Proof.
+intros. Search INR.
+Admitted.*)
+
+Search Reals_ext.Prob.t.
+
+
+
 Fixpoint sample x a1 as_ := 
   match as_ with
   | [] => (<{x := a1}>)
-  | (a2::as__) => <{ x := a1 [+ (Rdiv R1 (INR (List.length as_)))] (sample x a2 as__)}>
+  | (a2::as__) => <{ x := a1 [+ (Reals_ext.probdivRnnm 1 (List.length as_))] (sample x a2 as__)}>
   end.
 
-  Notation "x '$=' { a1 ; a2 ; .. ; an }" := (sample x a1 (cons a2 .. (cons an nil) ..))
+Notation "x '$=' { a1 ; a2 ; .. ; an }" := (sample x a1 (cons a2 .. (cons an nil) ..))
   (in custom com at level 0, x constr at level 0,
   a1 at level 85, a2 at level 85, an at level 85, no associativity) : com_scope.
 
@@ -189,7 +226,7 @@ Fixpoint sample x a1 as_ :=
 Definition plus2 : com :=
   <{ X := X + 2 }>.
 
-Definition half : R := 0.5.
+Definition half : Reals_ext.Prob.t := Reals_ext.probdivRnnm 1 2.
 
 Definition split : com :=
   <{ skip [+ half] skip }>.
@@ -205,7 +242,6 @@ Definition subtract_slowly_body : com :=
       X := X - 1 }>.
 
 
-
 Check (FSDist1.d (t_empty 0)).
 
 
@@ -213,7 +249,6 @@ Fixpoint ceval (st : state) (c : com) :=
   match c with
   | <{ skip }> => FSDist1.d st
   | <{ x := a }> => FSDist1.d (x !-> (aeval st a) ; st)
-  | <{ c1 [+ p] c2}> => FSDist1.d st (*FIX THIS*)
   | <{ c1 ; c2 }> =>
       let st' := ceval st c1 in
       FSDistBind.d st' (fun st => ceval st c2)
@@ -221,7 +256,16 @@ Fixpoint ceval (st : state) (c : com) :=
       if (beval st b)
         then ceval st c1
         else ceval st c2
+  | <{ c1 [+ p] c2}> => ConvFSDist.d p (ceval st c1) (ceval st c2)
   end.
+
+
+
+
+
+
+
+
 
 
 (*============== OLD STUFF ==================================*)

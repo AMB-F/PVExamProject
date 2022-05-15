@@ -9,6 +9,8 @@ From Coq Require Import Arith.PeanoNat. Import Nat.
 From Coq Require Import Lia.
 From PV Require Export Imp.
 
+From infotheo Require Import fdist.
+
 (** In the final chaper of _Logical Foundations_ (_Software
     Foundations_, volume 1), we began applying the mathematical tools
     developed in the first part of the course to studying the theory
