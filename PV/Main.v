@@ -124,7 +124,7 @@ Proof.
   move => m x1 x2 v.
   rewrite /t_update => /=.
   intros h1.
-  rewrite ffunE ifT.
+  rewrite ffunE ifT. subst.
   destruct h1.
   Admitted.
 

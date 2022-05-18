@@ -115,17 +115,51 @@ Notation "{{ P }}  c  {{ Q }}" :=
 Theorem test_skip: forall P,
   hoare_quad P AExp.CSkip P 1.
 Proof.
+intros. unfold hoare_quad. intros.
   move => P /=.
   rewrite /hoare_quad.
     move => st HPst s HQs //.
-    rewrite /FSDist1.d /FSDist1.f.
-    apply HPst in HQs.
+    rewrite /FSDist1.d /FSDist1.f /=.
+    unfold FSDist1.d. unfold FSDist1.f. simpl in *.
+    assert (H: [set st] \subset s). Admitted.
+
+
+    Theorem test_seq : forall P Q R d1 d2 c1 c2,
+    hoare_quad Q c2 R d1 ->
+    hoare_quad P c1 Q d2 ->
+    hoare_quad P (AExp.CSeq c1 c2) R (d1 * d2).
+Proof. Admitted.
+
+Definition bassn b : Assertion :=
+  fun st => (AExp.beval st b = true).
+
+Coercion bassn : AExp.bexp >-> Assertion.
+
+Arguments bassn /.
+
+
+
+Search AExp.bexp Assertion.
+Theorem test_if : forall P Q (b: AExp.bexp) d c1 c2,
+  hoare_quad (P /\ bassn b) c1 Q d ->
+  hoare_quad (P /\ ~b) c2 Q d ->
+  hoare_quad P (AExp.CIf b c1 c2) Q d.
+Proof. Admitted.
+
+
+Theorem test_plus forall P Q c1 c2 p,
+  hoare_quad P c1 Q p ->
+  hoare_quad P c2 Q (1-p) ->
+  hoare_quad P (AExp.CPlus p c1 c2) Q
+
+    
 
 (* Prove that [set st] \subset s *)
 (* Lemma Pr_incl E E' : E \subset E' -> Pr E <= Pr E'. *)
 Pr [set st] <= Pr s <= 1
 (* Lemma Pr_1 E : Pr E <= 1. *)
 (* Lemma Pr_set1 a : Pr [set a] = P a. *)
+(* Lemma f1 (d : t) : \sum_(a <- finsupp d) d a = 1.*)
 
 (*Theorem hoare_skip : forall P,
   {{ P }} <{ skip }> {{ P }}.
