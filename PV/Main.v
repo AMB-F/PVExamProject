@@ -260,8 +260,7 @@ Fixpoint ceval (st : state) (c : com) :=
   end.
 
 
-
-
+End AExp.
 
 
 
@@ -269,6 +268,36 @@ Fixpoint ceval (st : state) (c : com) :=
 
 
 (*============== OLD STUFF ==================================*)
+
+
+(*Reserved Notation
+  "st '=[' c ']=>' st'"
+  (at level 40, c custom com at level 99,
+   st constr, st' constr at next level).
+
+Type FSDist1.d.*)
+
+(*Inductive ceval : com -> state -> state -> Reals_ext.Prob.t :=
+  | E_Skip : forall st,
+      st =[ skip ]=> st
+  | E_Asgn  : forall st a n x,
+      aeval st a = n ->
+      st =[ x := a ]=> (x !-> n ; st)
+  | E_Seq : forall c1 c2 st st' st'',
+      st  =[ c1 ]=> st'  ->
+      st' =[ c2 ]=> st'' ->
+      st  =[ c1 ; c2 ]=> st''
+  | E_IfTrue : forall st st' b c1 c2,
+      beval st b = true ->
+      st =[ c1 ]=> st' ->
+      st =[ if b then c1 else c2 end]=> st'
+  | E_IfFalse : forall st st' b c1 c2,
+      beval st b = false ->
+      st =[ c2 ]=> st' ->
+      st =[ if b then c1 else c2 end]=> st'
+
+  where "st =[ c ]=> st'" := (ceval c st st').*)
+
 
 (*Definition state := mathcomp.ssreflect.fintype.ordinal 3.*)
 
@@ -284,9 +313,9 @@ Print ordinal_finType.
 
 Search FDist1.d.*)
 
-(*cEval/Imp is the thing you use to make the computation between pre- and postcondition in Hoare*)
+(*ceval_fun/Imp is the thing you use to make the computation between pre- and postcondition in Hoare*)
 
-(*Fixpoint cEval (st : Main.state) (c : com) : Main.state :=
+(*Fixpoint ceval_fun (st : Main.state) (c : com) : Main.state :=
   match c with
     | skip => (*fdist1 ?*) FDist1.I1
     | 
@@ -298,36 +327,36 @@ Search FDist1.d.*)
 
 
 (*From Imp.v*)
-(*Fixpoint ceval (st : state) (c : com) : state :=
+(*Fixpoint ceval_fun (st : state) (c : com) : state :=
   match c with
     | <{ skip }> =>
         st
     | <{ x := a }> =>
         (x !-> (aeval st a) ; st) (*What does the !-> mean?*)
     | <{ c1 ; c2 }> =>
-        let st' := ceval_fun_no_while st c1 in
-        ceval_fun_no_while st' c2
+        let st' := ceval_fun_fun_no_while st c1 in
+        ceval_fun_fun_no_while st' c2
     | <{ if b then c1 else c2 end}> =>
         if (beval st b)
-          then ceval_fun_no_while st c1
-          else ceval_fun_no_while st c2
+          then ceval_fun_fun_no_while st c1
+          else ceval_fun_fun_no_while st c2
     | <{ x $= as_ }> => st (* bogus, change to make sampling (what is sampling) *)
   end.
 
   (*From alternative version of Imp.v*)
-  Fixpoint ceval_alternative(st : state) (c : com) : state :=
+  Fixpoint ceval_fun_alternative(st : state) (c : com) : state :=
   match c with
     | SKIP =>
         st
     | x ::= a1 =>
         update st x (aeval st a1)
     | c1 ; c2 =>
-        let st' := ceval_fun_no_while st c1 in
-        ceval_fun_no_while st' c2
+        let st' := ceval_fun_fun_no_while st c1 in
+        ceval_fun_fun_no_while st' c2
     | IFB b THEN c1 ELSE c2 FI =>
         if (beval st b)
-          then ceval_fun_no_while st c1
-          else ceval_fun_no_while st c2
+          then ceval_fun_fun_no_while st c1
+          else ceval_fun_fun_no_while st c2
     | WHILE b DO c END =>
         st  (* bogus *)
   end.*)
