@@ -138,7 +138,7 @@ Coercion bassn : AExp.bexp >-> Assertion.
 Arguments bassn /.
 
 
-
+(*d is upper bounds, NOT equal*)
 Search AExp.bexp Assertion.
 Theorem test_if : forall P Q (b: AExp.bexp) d c1 c2,
   hoare_quad (P /\ bassn b) c1 Q d ->
@@ -146,13 +146,32 @@ Theorem test_if : forall P Q (b: AExp.bexp) d c1 c2,
   hoare_quad P (AExp.CIf b c1 c2) Q d.
 Proof. Admitted.
 
+Search Reals_ext.Prob.t.
 
-Theorem test_plus forall P Q c1 c2 p,
-  hoare_quad P c1 Q p ->
-  hoare_quad P c2 Q (1-p) ->
-  hoare_quad P (AExp.CPlus p c1 c2) Q
+Theorem test_plus : forall P Q c1 c2 p d1 d2,
+  hoare_quad P c1 Q d1 ->
+  hoare_quad P c2 Q d2 ->
+  hoare_quad P (AExp.CPlus p c1 c2) Q ((d1 * Reals_ext.Prob.p p) + (d2 * (1 - (Reals_ext.Prob.p p)))).
+Proof. Admitted.  
 
-    
+
+
+(* ##################  TWO COINS IN HOARE ################## *)
+
+Lemma twoCoins : forall x y,
+    hoare_quad
+        AExp.BTrue
+        (AExp.CSeq (AExp.CPlus AExp.half (AExp.CAsgn x (AExp.ANum 1)) (AExp.CAsgn x (AExp.ANum 2))) (AExp.CPlus AExp.half (AExp.CAsgn y (AExp.ANum 1)) (AExp.CAsgn y (AExp.ANum 2))))
+        (x + y = 3)
+        (Reals_ext.Prob.p AExp.half).
+Proof.
+intros. unfold hoare_quad. intros. destruct x.
+
+
+
+(*AExp.CSeq (AExp.sample x 1 [2])
+            (AExp.sample y 1 [2])*)    
+
 
 (* Prove that [set st] \subset s *)
 (* Lemma Pr_incl E E' : E \subset E' -> Pr E <= Pr E'. *)
