@@ -115,6 +115,7 @@ Theorem t_update_neq : forall (m : state) x1 x2 v,
 Proof.
   move => m x1 x2 v hneq.
   rewrite /t_update ffunE ifF => //.
+  unfold not in hneq. destruct hneq.
   Admitted.
 
 Lemma t_update_shadow : forall m x v1 v2,
@@ -219,12 +220,13 @@ Notation "{{ P }}  c  {{ Q }}" :=
     : com_scope.
 
 Open Scope proba_scope.
-(**
+(*
 Definition certain b dst : bool :=
     Pr dst (fun st => beval st b) == 1.*)
 
 Definition conva : Assertion -> Assertion -> prob -> Assertion.
 Admitted.
+
 Axiom convaE : forall P d Q dst1 dst2,
     P dst1 = true ->
     Q dst2 = true ->
@@ -232,16 +234,53 @@ Axiom convaE : forall P d Q dst1 dst2,
 
 Axiom hskip:
     forall P, {{ P }} skip {{ P }}.
+
+Lemma hskip_proof:
+    forall P, {{P}} skip {{P}}.
+Proof.
+intros. unfold hoare. Admitted.
+
+(*Axiom hasgn:
+  forall P x e, {{P}} x := e {{P}}.*)
+
 Axiom hprob:
     forall P c1 c2 Q Q' d,
     {{ P }} c1 {{ Q }} ->
     {{ P }} c2 {{ Q' }} ->
     {{ P }} c1 [+ d ] c2 {{ conva Q Q' d }}.
+
+Lemma hprob_proof:
+    forall P c1 c2 Q Q' d,
+    {{ P }} c1 {{ Q }} ->
+    {{ P }} c2 {{ Q' }} ->
+    {{ P }} c1 [+ d ] c2 {{ conva Q Q' d }}.
+Proof.
+intros. unfold hoare. unfold ceval. apply convaE.
+
+Admitted.
+
 Axiom hseq:
     forall P Q R c1 c2,
     {{ P }} c1 {{ Q }} ->
     {{ Q }} c2 {{ R }} ->
     {{ P }} c1 ; c2 {{ R }}.
+
+Lemma hseq_proof:
+  forall P Q R c1 c2,
+  {{ P }} c1 {{ Q }} ->
+  {{ Q }} c2 {{ R }} ->
+  {{ P }} c1 ; c2 {{ R }}.
+Proof.
+intros. unfold hoare in *. unfold ceval in *.
+
+Admitted.
+
+(*unfold hoare in *. assert ()
+
+
+
+subst. apply ceval with (c := <{ c1; c2 }>).*)
+
 Axiom hcons_left:
     forall P Q R c,
     (forall dst, P dst = true -> Q dst = true) ->
@@ -252,3 +291,17 @@ Axiom hcons_right:
     (forall dst, Q dst = true -> R dst = true) ->
     {{ P }} c {{ Q }} ->
     {{ P }} c {{ R }}.
+
+Search Reals_ext.Prob.t.
+
+Lemma twoCoins : forall x y,
+  {{fun _ => true}}
+  x$={ANum 1; ANum 2} ; y $= {ANum 1; ANum 2}
+  {{Pr (x + y = 3) == half}}.
+
+
+  {{ conva (fun _ => true) (fun _ => x + y == 3) half }}
+
+
+{{ Pr [x + y = 3] == half}}.
+   
