@@ -316,8 +316,6 @@ Definition certain b dst : bool :=
 Definition validate_postcond (dst: {dist state}) : bool :=
   let dst' := fdist_of_Dist dst in Pr dst' [set st | st.x + st.y == 3].
 
-Search Forall.
-
 Lemma two_coins : forall x y,
   {{ fun _ => true }}
   x $= {ANum 1; ANum 2} ; y $= {ANum 1; ANum 2}
