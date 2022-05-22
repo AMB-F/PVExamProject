@@ -12,7 +12,7 @@ Open Scope list_scope.
 Open Scope proba_scope.
 Open Scope convex_scope.
 
-Definition var := ordinal 4.
+Definition var := ordinal 8.
 Definition state := {ffun var -> nat}.
 
 Inductive aexp : Type :=
@@ -117,6 +117,9 @@ Proof.
   move => m x1 x2 v hneq.
   rewrite /t_update ffunE ifF => //.
   unfold not in hneq. destruct hneq.
+
+
+
   Admitted.
 
 Lemma t_update_shadow : forall m x v1 v2,
@@ -314,7 +317,12 @@ Definition certain b dst : bool :=
 
 
 Definition validate_postcond (dst: {dist state}) : bool :=
-  let dst' := fdist_of_Dist dst in Pr dst' [set st | st.x + st.y == 3].
+  let dst' := fdist_of_Dist dst in Pr dst' [set st | (st X) + (st Y) == 3] == half.
+
+  (* 
+      What is left to do in the function is to verify that the probability
+      is equal to 1/2
+  *)
 
 Lemma two_coins : forall x y,
   {{ fun _ => true }}

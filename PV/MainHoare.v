@@ -103,10 +103,10 @@ Definition hoare_quad
             (P : Assertion) (c : AExp.com) (Q : Assertion) (d : R) : Prop :=
     forall st,
         P st ->
-        let dst' := (AExp.ceval st c) in 
+        let dst' := (AExp.ceval st c) in
         forall (s : {set [finType of finsupp dst']}),
         (forall st', st' \in s <-> Q (fsval st')) ->
-        Pr (fdist_of_Dist dst') s = d.
+        Pr (fdist_of_Dist dst') s = d
 
 Notation "{{ P }}  c  {{ Q }}" :=
   (hoare_quad P c Q) (at level 90, c custom com at level 99)
