@@ -1,7 +1,8 @@
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From mathcomp.ssreflect Require Import all_ssreflect.
-From infotheo Require Import convex fsdist Reals_ext ssrR proba.
+From infotheo Require Import convex fsdist Reals_ext ssrR proba fdist.
+From mathcomp Require Import finmap choice.
 Require Import Nat Reals List.
 
 Open Scope R_scope.
@@ -176,7 +177,12 @@ Notation "x '$=' { a1 ; a2 ; .. ; an }" := (sample x a1 (cons a2 .. (cons an nil
 Definition plus2 : com :=
   <{ X := X + 2 }>.
 
-Definition half : prob := probdivRnnm 1 1.
+
+
+(* I've changed this from `probdivRnnm 1 1` to `probdivRnnm 1 2` 
+   as that seems to be right
+*)
+Definition half : prob := probdivRnnm 1 2.
 
 Definition split : com :=
   <{ skip [+ half] skip }>.
@@ -251,7 +257,7 @@ Axiom hprob:
 
 Lemma hprob_proof:
     forall P c1 c2 Q Q' d,
-    {{ P }} c1 {{ Q }} ->
+      {{ P }} c1 {{ Q }} ->
     {{ P }} c2 {{ Q' }} ->
     {{ P }} c1 [+ d ] c2 {{ conva Q Q' d }}.
 Proof.
@@ -286,6 +292,7 @@ Axiom hcons_left:
     (forall dst, P dst = true -> Q dst = true) ->
     {{ Q }} c {{ R }} ->
     {{ P }} c {{ R }}.
+
 Axiom hcons_right:
     forall P Q R c,
     (forall dst, Q dst = true -> R dst = true) ->
@@ -293,15 +300,30 @@ Axiom hcons_right:
     {{ P }} c {{ R }}.
 
 Search Reals_ext.Prob.t.
+Search Pr _.
 
-Lemma twoCoins : forall x y,
+
+(* Lemma twoCoins : forall x y,
   {{fun _ => true}}
   x$={ANum 1; ANum 2} ; y $= {ANum 1; ANum 2}
-  {{Pr (x + y = 3) == half}}.
+  {{Pr (x + y = 3) == half}}. *)
+
+(*
+Definition certain b dst : bool :=
+    Pr dst (fun st => beval st b) == 1.*)
 
 
-  {{ conva (fun _ => true) (fun _ => x + y == 3) half }}
+Definition validate_postcond (dst: {dist state}) : bool :=
+  let dst' := fdist_of_Dist dst in Pr dst' [set st | st. + st.y == 3].
+
+Search Forall.
+
+Lemma two_coins : forall x y,
+  {{ fun _ => true }}
+  x $= {ANum 1; ANum 2} ; y $= {ANum 1; ANum 2}
+  {{ validate_postcond }}.
+Proof.
+Admitted.
 
 
-{{ Pr [x + y = 3] == half}}.
-   
+
