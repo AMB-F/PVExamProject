@@ -317,11 +317,55 @@ Axiom conva_preq: forall be1 be2 (p1 p2: prob) d,
 Lemma divRnnm_1_1_inv2 : divRnnm 1 1 = /2.
 Proof. by rewrite /divRnnm /addn div1R. Qed.
 
+Lemma two_times_quarter : forall exp dst,
+preq exp (/ 2 * / 2) dst /\
+preq exp ((1 - / 2) * / 2) dst ->
+preq exp (/ 2) dst = true.
+Proof. Admitted.
+
+Lemma x_one_and_two_y_1: forall x y dst,
+preq <{ AId x = one_aexp}> (1 / 2) dst /\
+preq <{ AId x = two_aexp}> (1 - 1/2) dst ->
+((preq <{ x + y = three_aexp }> (/ 2)) [y |-> 1]) dst = true.
+Proof. Admitted.
+
+Lemma x_one_and_two_y_2: forall x y dst,
+preq <{ AId x = one_aexp}> (1 / 2) dst /\
+preq <{ AId x = two_aexp}> (1 - 1/2) dst ->
+((preq <{ x + y = three_aexp }> (/ 2)) [y |-> 2]) dst = true.
+Proof. Admitted.
+
 Lemma twocoins: {{ xpredT }}
 X $= {ANum 1; ANum 2}; Y $= {ANum 1; ANum 2}
 {{ preq <{ X + Y = three_aexp }> (/2)%R }}.
-
 Proof.
+eapply (hseq_proof _ (conva (preq <{ X = one_aexp }> 1) (preq <{ X = two_aexp}> 1) _)).
+- apply hprob;
+    try eapply hcons_left;
+    last first;
+    try apply hasgn;
+    try intros;
+    try apply preq_assn.
+- eapply (hcons_right _ (conva (preq <{ X + Y = three_aexp }> (/2)%R) (preq <{ X + Y = three_aexp }> (/2)%R) _)); last first.
+ -- apply hprob.
+  --- eapply hcons_left; last first.
+    ---- apply hasgn.
+    ---- intros dst. rewrite conva_preq.
+          case: andP.
+      ----- simpl. rewrite !mulR1. intros h1 h2. unfold divRnnm in h1. unfold addn in h1. simpl in *. apply x_one_and_two_y_1. auto.
+      ----- intros. discriminate H. 
+  --- eapply hcons_left; last first.
+    ---- apply hasgn.
+    ---- intros dst. rewrite conva_preq. case: andP.
+      ----- simpl. rewrite !mulR1. intros. apply x_one_and_two_y_2. auto.
+      ----- intros. discriminate H.
+  --- intros dst. rewrite conva_preq. case: andP.
+    ---- intros. simpl in p. rewrite divRnnm_1_1_inv2 in p. apply two_times_quarter. auto.
+    ---- intros. discriminate H.
+Qed.
+
+
+(*
   eapply (hseq_proof _ (conva (preq <{ X = one_aexp }> 1) (preq <{ X = two_aexp}> 1) _)).
   - apply hprob.
     -- eapply hcons_left; last apply hasgn.
@@ -335,9 +379,10 @@ Proof.
         rewrite conva_preq.
         case: andP => /= //.
         rewrite !mulR1.
-        move => [hx1 hx2] _.
-    -- eapply hcons_left; last apply hasgn. admit.
+        move => [hx1 hx2] _. admit.
+    -- eapply hcons_left; last apply hasgn.
+        intros.  
     admit.
-Admitted.
+Admitted.*)
 
 
