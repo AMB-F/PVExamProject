@@ -267,14 +267,11 @@ Axiom hprob:
     {{ P }} c2 {{ Q' }} ->
     {{ P }} c1 [+ d ] c2 {{ conva Q Q' d }}.
 
-Lemma hprob_proof:
+Axiom hprob_proof:
     forall P c1 c2 Q Q' d,
       {{ P }} c1 {{ Q }} ->
     {{ P }} c2 {{ Q' }} ->
     {{ P }} c1 [+ d ] c2 {{ conva Q Q' d }}.
-Proof.
-intros. unfold hoare. unfold ceval. apply convaE.
-Admitted.
 
 Axiom hseq:
     forall P Q R c1 c2,
@@ -291,12 +288,6 @@ Proof.
 intros. unfold hoare in *. unfold ceval in *.
 Admitted.
 
-(*unfold hoare in *. assert ()
-
-
-
-subst. apply ceval with (c := <{ c1; c2 }>).*)
-
 Axiom hcons_left:
     forall P Q R c,
     (forall dst, P dst = true -> Q dst = true) ->
@@ -309,63 +300,43 @@ Axiom hcons_right:
     {{ P }} c {{ Q }} ->
     {{ P }} c {{ R }}.
 
-(*Search Reals_ext.Prob.t.
-Search Pr _.*)
-
-
-(* Lemma twoCoins : forall x y,
-  {{fun _ => true}}
-  x$={ANum 1; ANum 2} ; y $= {ANum 1; ANum 2}
-  {{Pr (x + y = 3) == half}}. *)
-
-(*
-Definition certain b dst : bool :=
-    Pr dst (fun st => beval st b) == 1.*)
-
-
-(* Definition validate_postcond (dst: {dist state}) : bool :=
-  let dst' := fdist_of_Dist dst in Pr dst' [set st | (st X) + (st Y) == 3] == half.
-
-  (* 
-      What is left to do in the function is to verify that the probability
-      is equal to 1/2
-  *)
-
-Lemma two_coins : forall x y,
-  {{ fun _ => true }}
-  x $= {ANum 1; ANum 2} ; y $= {ANum 1; ANum 2}
-  {{ validate_postcond }}.
-Proof.
-Admitted. *)
-
 Definition preq exp p dst :=
-  eqr (Pr (fdist_of_FSDist.d dst)
-  [set st | beval (val st) exp ]) p.
+  eqr (Pr (fdist_of_FSDist.d dst) [set st | beval (val st) exp ]) p.
 
-Definition three : aexp := ANum 3.
+Lemma preq_assn: forall x v dst,
+  ((preq <{ AId x = ANum v }> 1%R) [x |-> v]) dst = true.
+Proof.
+  intros.
+  rewrite /assn_sub /preq.
+  case: eqrP => //.
+Admitted.
+
+Axiom conva_preq: forall be1 be2 (p1 p2: prob) d,
+  conva (preq be1 p1) (preq be2 p2) d =1 fun dst => preq be1 (d * p1)%R dst && preq be2 ((1-d) * p2) dst.
+
+Lemma divRnnm_1_1_inv2 : divRnnm 1 1 = /2.
+Proof. by rewrite /divRnnm /addn div1R. Qed.
 
 Lemma twocoins: {{ xpredT }}
 X $= {ANum 1; ANum 2}; Y $= {ANum 1; ANum 2}
-{{ preq <{ X + Y = three }> (/2%R) }}.
+{{ preq <{ X + Y = three_aexp }> (/2)%R }}.
 
 Proof.
   eapply (hseq_proof _ (conva (preq <{ X = one_aexp }> 1) (preq <{ X = two_aexp}> 1) _)).
   - apply hprob.
-    -- eapply hcons_left; last first.
-        apply hasgn. intros. unfold preq. unfold assn_sub. simpl.
-        case: eqrP => H1 //. admit.
-          (*Search (Pr _ _ = 1%R).
-          Search ([set _ | _]).
-          unfold Pr in H1.*)
-    -- eapply hcons_left; last first. eapply hasgn.
-        intros. unfold preq. unfold assn_sub. simpl. case: eqrP => H1 //. admit.
-  - (*simpl. unfold divRnnm. unfold addn. simpl.*)
-    (*eapply (hcons_left _ (fun st => preq <{ X = one_aexp }> (/2)%R st &&
-                                   preq <{ X = two_aexp }> (/2)%R st)). admit.*)
-    eapply (hcons_right _ (conva (preq <{ X + Y = three }> (/ 2)) (preq <{ X + Y = three }> (/ 2)) _)); last first.
+    -- eapply hcons_left; last apply hasgn.
+        move => dst _. apply preq_assn.
+    -- eapply hcons_left; last apply hasgn.
+        move => dst _. apply preq_assn.
+  - eapply (hcons_right _ (conva (preq <{ X + Y = three_aexp }> (/2)%R) (preq <{ X + Y = three_aexp }> (/2)%R) _)); last first.
     apply hprob.
-    -- eapply hcons_left; last first. apply hasgn. admit.
-    -- eapply hcons_left; last first. apply hasgn. admit.
+    -- eapply hcons_left; last apply hasgn.
+        move => dst /=.
+        rewrite conva_preq.
+        case: andP => /= //.
+        rewrite !mulR1.
+        move => [hx1 hx2] _.
+    -- eapply hcons_left; last apply hasgn. admit.
     admit.
 Admitted.
 
