@@ -2,7 +2,7 @@
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From mathcomp.ssreflect Require Import all_ssreflect.
 From infotheo Require Import convex fsdist Reals_ext ssrR proba fdist.
-From mathcomp Require Import finmap choice.
+From mathcomp Require Import finmap choice Rstruct.
 Require Import Nat Reals List.
 Require Import Program.
 Open Scope R_scope.
@@ -169,7 +169,7 @@ Fixpoint sample x a1 as_ :=
   match as_ with
   | nil => (<{x := a1}>)
   | (a2::as__) =>
-      (let l := List.length as__ in
+      (let l := List.length as_ in
       let p := (divRnnm 1 l)%:pr in
       <{ x := a1 [+ p ] (sample x a2 as__)}>)
   end.
@@ -276,14 +276,6 @@ Proof.
 intros. unfold hoare. unfold ceval. apply convaE.
 Admitted.
 
-Axiom hprob_rev_two_choice_sample:
-  forall P P' c1 c2 Q Q1 Q2 Q3 Q4 d,
-  {{ P }} c1 {{ Q1 }} ->
-  {{ P }} c2 {{ Q2 }} ->
-  {{ P' }} c1 {{ Q3 }} ->
-  {{ P' }} c2 {{ Q4 }} ->
-  {{ conva P P' d}} c1 [+ d ] c2 {{ Q }}.
-
 Axiom hseq:
     forall P Q R c1 c2,
     {{ P }} c1 {{ Q }} ->
@@ -347,43 +339,34 @@ Proof.
 Admitted. *)
 
 Definition preq exp p dst :=
-  Rstruct.eqr (Pr (fdist_of_FSDist.d dst)
+  eqr (Pr (fdist_of_FSDist.d dst)
   [set st | beval (val st) exp ]) p.
 
 Definition three : aexp := ANum 3.
-Check @val.
-Check beval.
-About val.
+
 Lemma twocoins: {{ xpredT }}
 X $= {ANum 1; ANum 2}; Y $= {ANum 1; ANum 2}
 {{ preq <{ X + Y = three }> (/2%R) }}.
-  
-(* fun dst => Rstruct.eqr (Pr (fdist_of_FSDist.d dst)
-[set st | beval (val st) <{ X + Y = three }> ]) (/2%R) }}. *)
+
 Proof.
   eapply (hseq_proof _ (conva (preq <{ X = one_aexp }> 1) (preq <{ X = two_aexp}> 1) _)).
   - apply hprob.
     -- eapply hcons_left; last first.
-      --- apply hasgn.
-      --- intros. unfold preq. simpl. admit.
-    -- eapply hcons_left; last first. eapply hasgn. admit.
-  - apply hprob_rev_two_choice_sample with
-    (Q1 := (preq <{ X + Y = three}> 0))
-    (Q2 := (preq <{ X + Y = three}> 1))
-    (Q3 := (preq <{ X + Y = three}> 1))
-    (Q4 := (preq <{ X + Y = three}> 0)).
+        apply hasgn. intros. unfold preq. unfold assn_sub. simpl.
+        case: eqrP => H1 //. admit.
+          (*Search (Pr _ _ = 1%R).
+          Search ([set _ | _]).
+          unfold Pr in H1.*)
+    -- eapply hcons_left; last first. eapply hasgn.
+        intros. unfold preq. unfold assn_sub. simpl. case: eqrP => H1 //. admit.
+  - (*simpl. unfold divRnnm. unfold addn. simpl.*)
+    (*eapply (hcons_left _ (fun st => preq <{ X = one_aexp }> (/2)%R st &&
+                                   preq <{ X = two_aexp }> (/2)%R st)). admit.*)
+    eapply (hcons_right _ (conva (preq <{ X + Y = three }> (/ 2)) (preq <{ X + Y = three }> (/ 2)) _)); last first.
+    apply hprob.
     -- eapply hcons_left; last first. apply hasgn. admit.
     -- eapply hcons_left; last first. apply hasgn. admit.
-    -- eapply hcons_left; last first. apply hasgn. admit.
-    -- eapply hcons_left; last first. apply hasgn. admit.
-
-
-
-
-  (*
-  - apply hprob_rev with (Q' := (preq <{ X + Y = three}> 0)) (Q'' := (preq <{ X + Y = three}> 0)). (*SUS*)
-    -- eapply hcons_left; last first. apply hasgn. admit.
-    -- eapply hcons_left; last first. apply hasgn. admit.*)
-
+    admit.
+Admitted.
 
 
