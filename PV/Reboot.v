@@ -362,7 +362,7 @@ Proof.
   - apply hprob.
   -- eapply hcons_left; last first. apply hasgn. admit.
   -- eapply hcons_left; last first. eapply hasgn. admit.
-  --   
+  -- simpl in *. 
 
 
 
