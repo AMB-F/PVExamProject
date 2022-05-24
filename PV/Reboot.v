@@ -27,6 +27,10 @@ Definition Y: var := inord 1.
 Definition Z: var := inord 2.
 Definition W: var := inord 3.
 
+Definition one_aexp := ANum 1.
+Definition two_aexp := ANum 2.
+Definition three_aexp := ANum 3.
+
 Inductive bexp : Type :=
   | BTrue
   | BFalse
@@ -251,15 +255,14 @@ intros. unfold hoare. Admitted.
 
 Definition assn_sub (X: var) (a: nat) (P: Assertion) : Assertion :=
   fun (dst : {dist state}) =>
-    P (FDistMap.d)
-    
-    (* (FSDist_of_fdist.d ((fdist_of_FSDist.d dst))). *)
+    P (FSDistfmap (fun (st: state) => t_update st X a ) dst).
 
 Notation "P [ X |-> a ]" := (assn_sub X a P)
   (at level 10, X at next level, a custom com).
 
 Axiom hasgn:
-  forall P x e, {{P}} x := e {{P}}.
+  forall Q X a,
+  {{Q [X |-> a]}} X := a {{Q}}.
 
 Axiom hprob:
     forall P c1 c2 Q Q' d,
@@ -340,6 +343,9 @@ Lemma two_coins : forall x y,
 Proof.
 Admitted. *)
 
+Definition preq exp p dst :=
+  Rstruct.eqr (Pr (fdist_of_FSDist.d dst)
+  [set st | beval (val st) exp ]) p.
 
 Definition three : aexp := ANum 3.
 Check @val.
@@ -347,12 +353,16 @@ Check beval.
 About val.
 Lemma twocoins: {{ xpredT }}
 X $= {ANum 1; ANum 2}; Y $= {ANum 1; ANum 2}
-{{ fun dst => Rstruct.eqr (Pr (fdist_of_FSDist.d dst)
-[set st | beval (val st) <{ X + Y = three }> ]) (/2%R) }}.
+{{ preq <{ X + Y = three }> (/2%R) }}.
+  
+(* fun dst => Rstruct.eqr (Pr (fdist_of_FSDist.d dst)
+[set st | beval (val st) <{ X + Y = three }> ]) (/2%R) }}. *)
 Proof.
-  eapply hseq_proof.
+  eapply (hseq_proof _ (conva (preq <{ X = one_aexp }> 1) (preq <{ X = two_aexp}> 1) _)).
   - apply hprob.
-  -- apply  
+  -- eapply hcons_left; last first. apply hasgn. admit.
+  -- eapply hcons_left; last first. eapply hasgn. admit.
+  --   
 
 
 
