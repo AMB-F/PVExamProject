@@ -121,9 +121,6 @@ Proof.
   move => m x1 x2 v hneq.
   rewrite /t_update ffunE ifF => //.
   unfold not in hneq. destruct hneq.
-
-
-
   Admitted.
 
 Lemma t_update_shadow : forall m x v1 v2,
@@ -277,8 +274,15 @@ Lemma hprob_proof:
     {{ P }} c1 [+ d ] c2 {{ conva Q Q' d }}.
 Proof.
 intros. unfold hoare. unfold ceval. apply convaE.
-
 Admitted.
+
+Axiom hprob_rev_two_choice_sample:
+  forall P P' c1 c2 Q Q1 Q2 Q3 Q4 d,
+  {{ P }} c1 {{ Q1 }} ->
+  {{ P }} c2 {{ Q2 }} ->
+  {{ P' }} c1 {{ Q3 }} ->
+  {{ P' }} c2 {{ Q4 }} ->
+  {{ conva P P' d}} c1 [+ d ] c2 {{ Q }}.
 
 Axiom hseq:
     forall P Q R c1 c2,
@@ -293,7 +297,6 @@ Lemma hseq_proof:
   {{ P }} c1 ; c2 {{ R }}.
 Proof.
 intros. unfold hoare in *. unfold ceval in *.
-
 Admitted.
 
 (*unfold hoare in *. assert ()
@@ -314,8 +317,8 @@ Axiom hcons_right:
     {{ P }} c {{ Q }} ->
     {{ P }} c {{ R }}.
 
-Search Reals_ext.Prob.t.
-Search Pr _.
+(*Search Reals_ext.Prob.t.
+Search Pr _.*)
 
 
 (* Lemma twoCoins : forall x y,
@@ -360,9 +363,27 @@ X $= {ANum 1; ANum 2}; Y $= {ANum 1; ANum 2}
 Proof.
   eapply (hseq_proof _ (conva (preq <{ X = one_aexp }> 1) (preq <{ X = two_aexp}> 1) _)).
   - apply hprob.
-  -- eapply hcons_left; last first. apply hasgn. admit.
-  -- eapply hcons_left; last first. eapply hasgn. admit.
-  -- simpl in *. 
+    -- eapply hcons_left; last first.
+      --- apply hasgn.
+      --- intros. unfold preq. simpl. admit.
+    -- eapply hcons_left; last first. eapply hasgn. admit.
+  - apply hprob_rev_two_choice_sample with
+    (Q1 := (preq <{ X + Y = three}> 0))
+    (Q2 := (preq <{ X + Y = three}> 1))
+    (Q3 := (preq <{ X + Y = three}> 1))
+    (Q4 := (preq <{ X + Y = three}> 0)).
+    -- eapply hcons_left; last first. apply hasgn. admit.
+    -- eapply hcons_left; last first. apply hasgn. admit.
+    -- eapply hcons_left; last first. apply hasgn. admit.
+    -- eapply hcons_left; last first. apply hasgn. admit.
+
+
+
+
+  (*
+  - apply hprob_rev with (Q' := (preq <{ X + Y = three}> 0)) (Q'' := (preq <{ X + Y = three}> 0)). (*SUS*)
+    -- eapply hcons_left; last first. apply hasgn. admit.
+    -- eapply hcons_left; last first. apply hasgn. admit.*)
 
 
 
