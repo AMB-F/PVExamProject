@@ -4,7 +4,7 @@ From mathcomp.ssreflect Require Import all_ssreflect.
 From infotheo Require Import convex fsdist Reals_ext ssrR proba fdist.
 From mathcomp Require Import finmap choice.
 Require Import Nat Reals List.
-
+Require Import Program.
 Open Scope R_scope.
 Open Scope bool_scope.
 Open Scope nat_scope.
@@ -249,8 +249,17 @@ Lemma hskip_proof:
 Proof.
 intros. unfold hoare. Admitted.
 
-(*Axiom hasgn:
-  forall P x e, {{P}} x := e {{P}}.*)
+Definition assn_sub (X: var) (a: nat) (P: Assertion) : Assertion :=
+  fun (dst : {dist state}) =>
+    P (FDistMap.d)
+    
+    (* (FSDist_of_fdist.d ((fdist_of_FSDist.d dst))). *)
+
+Notation "P [ X |-> a ]" := (assn_sub X a P)
+  (at level 10, X at next level, a custom com).
+
+Axiom hasgn:
+  forall P x e, {{P}} x := e {{P}}.
 
 Axiom hprob:
     forall P c1 c2 Q Q' d,
@@ -316,7 +325,7 @@ Definition certain b dst : bool :=
     Pr dst (fun st => beval st b) == 1.*)
 
 
-Definition validate_postcond (dst: {dist state}) : bool :=
+(* Definition validate_postcond (dst: {dist state}) : bool :=
   let dst' := fdist_of_Dist dst in Pr dst' [set st | (st X) + (st Y) == 3] == half.
 
   (* 
@@ -329,7 +338,21 @@ Lemma two_coins : forall x y,
   x $= {ANum 1; ANum 2} ; y $= {ANum 1; ANum 2}
   {{ validate_postcond }}.
 Proof.
-Admitted.
+Admitted. *)
+
+
+Definition three : aexp := ANum 3.
+Check @val.
+Check beval.
+About val.
+Lemma twocoins: {{ xpredT }}
+X $= {ANum 1; ANum 2}; Y $= {ANum 1; ANum 2}
+{{ fun dst => Rstruct.eqr (Pr (fdist_of_FSDist.d dst)
+[set st | beval (val st) <{ X + Y = three }> ]) (/2%R) }}.
+Proof.
+  eapply hseq_proof.
+  - apply hprob.
+  -- apply  
 
 
 
