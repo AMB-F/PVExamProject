@@ -1,9 +1,10 @@
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From mathcomp.ssreflect Require Import all_ssreflect.
-From infotheo Require Import convex fsdist Reals_ext ssrR proba.
+From infotheo Require Import convex fsdist Reals_ext ssrR proba fdist.
+From mathcomp Require Import finmap choice Rstruct.
 Require Import Nat Reals List.
-
+Require Import Program.
 Open Scope R_scope.
 Open Scope bool_scope.
 Open Scope nat_scope.
@@ -11,7 +12,7 @@ Open Scope list_scope.
 Open Scope proba_scope.
 Open Scope convex_scope.
 
-Definition var := ordinal 4.
+Definition var := ordinal 8.
 Definition state := {ffun var -> nat}.
 
 Inductive aexp : Type :=
@@ -25,6 +26,10 @@ Definition X: var := inord 0.
 Definition Y: var := inord 1.
 Definition Z: var := inord 2.
 Definition W: var := inord 3.
+
+Definition one_aexp := ANum 1.
+Definition two_aexp := ANum 2.
+Definition three_aexp := ANum 3.
 
 Inductive bexp : Type :=
   | BTrue
@@ -115,6 +120,7 @@ Theorem t_update_neq : forall (m : state) x1 x2 v,
 Proof.
   move => m x1 x2 v hneq.
   rewrite /t_update ffunE ifF => //.
+  unfold not in hneq. destruct hneq.
   Admitted.
 
 Lemma t_update_shadow : forall m x v1 v2,
@@ -163,7 +169,7 @@ Fixpoint sample x a1 as_ :=
   match as_ with
   | nil => (<{x := a1}>)
   | (a2::as__) =>
-      (let l := List.length as__ in
+      (let l := List.length as_ in
       let p := (divRnnm 1 l)%:pr in
       <{ x := a1 [+ p ] (sample x a2 as__)}>)
   end.
@@ -175,7 +181,12 @@ Notation "x '$=' { a1 ; a2 ; .. ; an }" := (sample x a1 (cons a2 .. (cons an nil
 Definition plus2 : com :=
   <{ X := X + 2 }>.
 
-Definition half : prob := probdivRnnm 1 1.
+
+
+(* I've changed this from `probdivRnnm 1 1` to `probdivRnnm 1 2` 
+   as that seems to be right
+*)
+Definition half : prob := probdivRnnm 1 2.
 
 Definition split : com :=
   <{ skip [+ half] skip }>.
@@ -219,12 +230,13 @@ Notation "{{ P }}  c  {{ Q }}" :=
     : com_scope.
 
 Open Scope proba_scope.
-(**
+(*
 Definition certain b dst : bool :=
     Pr dst (fun st => beval st b) == 1.*)
 
 Definition conva : Assertion -> Assertion -> prob -> Assertion.
 Admitted.
+
 Axiom convaE : forall P d Q dst1 dst2,
     P dst1 = true ->
     Q dst2 = true ->
@@ -233,9 +245,31 @@ Axiom convaE : forall P d Q dst1 dst2,
 Axiom hskip:
     forall P, {{ P }} skip {{ P }}.
 
+Lemma hskip_proof:
+    forall P, {{P}} skip {{P}}.
+Proof.
+intros. unfold hoare. Admitted.
+
+Definition assn_sub (X: var) (a: nat) (P: Assertion) : Assertion :=
+  fun (dst : {dist state}) =>
+    P (FSDistfmap (fun (st: state) => t_update st X a ) dst).
+
+Notation "P [ X |-> a ]" := (assn_sub X a P)
+  (at level 10, X at next level, a custom com).
+
+Axiom hasgn:
+  forall Q X a,
+  {{Q [X |-> a]}} X := a {{Q}}.
+
 Axiom hprob:
     forall P c1 c2 Q Q' d,
     {{ P }} c1 {{ Q }} ->
+    {{ P }} c2 {{ Q' }} ->
+    {{ P }} c1 [+ d ] c2 {{ conva Q Q' d }}.
+
+Axiom hprob_proof:
+    forall P c1 c2 Q Q' d,
+      {{ P }} c1 {{ Q }} ->
     {{ P }} c2 {{ Q' }} ->
     {{ P }} c1 [+ d ] c2 {{ conva Q Q' d }}.
 
@@ -245,14 +279,109 @@ Axiom hseq:
     {{ Q }} c2 {{ R }} ->
     {{ P }} c1 ; c2 {{ R }}.
 
+Lemma hseq_proof:
+  forall P Q R c1 c2,
+  {{ P }} c1 {{ Q }} ->
+  {{ Q }} c2 {{ R }} ->
+  {{ P }} c1 ; c2 {{ R }}.
+Proof.
+intros. unfold hoare in *. unfold ceval in *.
+Admitted.
+
 Axiom hcons_left:
     forall P Q R c,
     (forall dst, P dst = true -> Q dst = true) ->
     {{ Q }} c {{ R }} ->
     {{ P }} c {{ R }}.
-    mas
 Axiom hcons_right:
     forall P Q R c,
     (forall dst, Q dst = true -> R dst = true) ->
     {{ P }} c {{ Q }} ->
     {{ P }} c {{ R }}.
+
+Definition preq exp p dst :=
+  eqr (Pr (fdist_of_FSDist.d dst) [set st | beval (val st) exp ]) p.
+
+Lemma preq_assn: forall x v dst,
+  ((preq <{ AId x = ANum v }> 1%R) [x |-> v]) dst = true.
+Proof.
+  intros.
+  rewrite /assn_sub /preq.
+  case: eqrP => //.
+Admitted.
+
+Axiom conva_preq: forall be1 be2 (p1 p2: prob) d,
+  conva (preq be1 p1) (preq be2 p2) d =1 fun dst => preq be1 (d * p1)%R dst && preq be2 ((1-d) * p2) dst.
+
+Lemma divRnnm_1_1_inv2 : divRnnm 1 1 = /2.
+Proof. by rewrite /divRnnm /addn div1R. Qed.
+
+Lemma two_times_quarter : forall exp dst,
+preq exp (/ 2 * / 2) dst /\
+preq exp ((1 - / 2) * / 2) dst ->
+preq exp (/ 2) dst = true.
+Proof. Admitted.
+
+Lemma x_one_and_two_y_1: forall x y dst,
+preq <{ AId x = one_aexp}> (1 / 2) dst /\
+preq <{ AId x = two_aexp}> (1 - 1/2) dst ->
+((preq <{ x + y = three_aexp }> (/ 2)) [y |-> 1]) dst = true.
+Proof. Admitted.
+
+Lemma x_one_and_two_y_2: forall x y dst,
+preq <{ AId x = one_aexp}> (1 / 2) dst /\
+preq <{ AId x = two_aexp}> (1 - 1/2) dst ->
+((preq <{ x + y = three_aexp }> (/ 2)) [y |-> 2]) dst = true.
+Proof. Admitted.
+
+Lemma twocoins: {{ xpredT }}
+X $= {ANum 1; ANum 2}; Y $= {ANum 1; ANum 2}
+{{ preq <{ X + Y = three_aexp }> (/2)%R }}.
+Proof.
+eapply (hseq_proof _ (conva (preq <{ X = one_aexp }> 1) (preq <{ X = two_aexp}> 1) _)).
+- apply hprob;
+    try eapply hcons_left;
+    last first;
+    try apply hasgn;
+    try intros;
+    try apply preq_assn.
+- eapply (hcons_right _ (conva (preq <{ X + Y = three_aexp }> (/2)%R) (preq <{ X + Y = three_aexp }> (/2)%R) _)); last first.
+ -- apply hprob.
+  --- eapply hcons_left; last first.
+    ---- apply hasgn.
+    ---- intros dst. rewrite conva_preq.
+          case: andP.
+      ----- simpl. rewrite !mulR1. intros h1 h2. unfold divRnnm in h1. unfold addn in h1. simpl in *. apply x_one_and_two_y_1. auto.
+      ----- intros. discriminate H. 
+  --- eapply hcons_left; last first.
+    ---- apply hasgn.
+    ---- intros dst. rewrite conva_preq. case: andP.
+      ----- simpl. rewrite !mulR1. intros. apply x_one_and_two_y_2. auto.
+      ----- intros. discriminate H.
+  --- intros dst. rewrite conva_preq. case: andP.
+    ---- intros. simpl in p. rewrite divRnnm_1_1_inv2 in p. apply two_times_quarter. auto.
+    ---- intros. discriminate H.
+Qed.
+
+
+(*
+  eapply (hseq_proof _ (conva (preq <{ X = one_aexp }> 1) (preq <{ X = two_aexp}> 1) _)).
+  - apply hprob.
+    -- eapply hcons_left; last apply hasgn.
+        move => dst _. apply preq_assn.
+    -- eapply hcons_left; last apply hasgn.
+        move => dst _. apply preq_assn.
+  - eapply (hcons_right _ (conva (preq <{ X + Y = three_aexp }> (/2)%R) (preq <{ X + Y = three_aexp }> (/2)%R) _)); last first.
+    apply hprob.
+    -- eapply hcons_left; last apply hasgn.
+        move => dst /=.
+        rewrite conva_preq.
+        case: andP => /= //.
+        rewrite !mulR1.
+        move => [hx1 hx2] _. admit.
+    -- eapply hcons_left; last apply hasgn.
+        intros.  
+    admit.
+Admitted.*)
+
+
