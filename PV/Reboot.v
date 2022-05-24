@@ -232,21 +232,25 @@ Axiom convaE : forall P d Q dst1 dst2,
 
 Axiom hskip:
     forall P, {{ P }} skip {{ P }}.
+
 Axiom hprob:
     forall P c1 c2 Q Q' d,
     {{ P }} c1 {{ Q }} ->
     {{ P }} c2 {{ Q' }} ->
     {{ P }} c1 [+ d ] c2 {{ conva Q Q' d }}.
+
 Axiom hseq:
     forall P Q R c1 c2,
     {{ P }} c1 {{ Q }} ->
     {{ Q }} c2 {{ R }} ->
     {{ P }} c1 ; c2 {{ R }}.
+
 Axiom hcons_left:
     forall P Q R c,
     (forall dst, P dst = true -> Q dst = true) ->
     {{ Q }} c {{ R }} ->
     {{ P }} c {{ R }}.
+    mas
 Axiom hcons_right:
     forall P Q R c,
     (forall dst, Q dst = true -> R dst = true) ->
