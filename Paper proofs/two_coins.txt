@@ -1,7 +1,7 @@
-                                                                          {True} 
-                                                                          x $= {1, 2}; y $= {1, 2} 
-                                                                          {True}
-                                                                          x := 1 [+ 1/2] x := 2
+                                                                             {True} 
+                                                                             x $= {1, 2}; y $= {1, 2} 
+                                                                             {True}
+                                                                             x := 1 [+ 1/2] x := 2
                                                                     {true}                          {true}
                                                                     {1 = 1}                         {2 = 2}
                                                                     x := 1                          x := 2
@@ -18,7 +18,7 @@
 sum := x + y                  			  sum := x + y                  		           sum := x + y                  			        sum := x + y                  							           
 {x = 1 /\ y = 1 /\ sum = 2 /\ P[sum = 2] = 1}     {x = 2 /\ y = 1 /\ sum = 3 /\ P[sum = 3] = 1}      {x = 1 /\ y = 2 /\ sum = 3 /\ P[sum = 3] = 1}   	  {x = 2 /\ y = 2 /\ sum = 4 /\ P[sum = 4] = 1}   	  
 {P[sum = 2] = 1}                                  {P[sum = 3] = 1}                                   {P[sum = 3] = 1}                                   {P[sum = 4] = 1}
-                                                                    {P[sum = 3] = 1/2}
+                                                                             {P[sum = 3] = 1/2}
 
 
                
