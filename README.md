@@ -15,10 +15,10 @@ Additionally, you need to have `make` installed. It is also recommended to have 
 
 ## Cleaning
 
-Should you want to clean all of the compiled files in the `PV` directory, you can run this following command, assuming you're running this project with access to the GNU coreutils:
+Should you want to clean all of the compiled files in the `PV` directory, you can run the following command:
 
 ```bash
-ls PV/*.(aux|vos|vok|vo|glob) | xargs rm
+make clean
 ```
 
 # Running
