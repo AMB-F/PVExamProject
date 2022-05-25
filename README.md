@@ -11,7 +11,7 @@ You can read on how to install these libraries here:
 - [infotheo](https://github.com/affeldt-aist/infotheo#building-and-installation-instructions)
 - [math-comp](https://math-comp.github.io/installation.html)
 
-Additionally, you need to have `make` installed. It is also recommended to have GNU coreutils installed. Should you run this project on a Mac or on a Linux OS you should be fine if you've installed a general development tools bundle.
+Additionally, you need to have `make` installed.
 
 ## Cleaning
 
