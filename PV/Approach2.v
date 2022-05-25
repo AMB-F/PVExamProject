@@ -1,3 +1,17 @@
+(*
+REFERENCES:
+The code contained in this file is heavily based on the code from
+    - "Software Foundations 1: Logical Foundations, Imp.v"
+    "https://softwarefoundations.cis.upenn.edu/lf-current/Imp.html"
+    - "Software Foundations 2: Programming Language Foundations, Hoare.v"
+        "https://softwarefoundations.cis.upenn.edu/plf-current/Hoare.html"
+Both by Benjamin C. Pierce, et al. 2021.
+The base of this code has been taken directly from these files,
+    and some code has been taken and edited to fit our project.
+Some other additions to the code has been made by ITU associate professor Alessandro Bruni.
+*)
+
+
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From mathcomp.ssreflect Require Import all_ssreflect.
