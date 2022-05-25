@@ -31,7 +31,7 @@ make
 ```
 
 # References:
-The code contained in this file is heavily based on the code from
+The code contained in `PV/Approach1.v` and `PV/Approach2.v` is heavily based on the code from
 
 - [Software Foundations 1: Logical Foundations](https://softwarefoundations.cis.upenn.edu/lf-current/toc.html), Imp.v. Maps.v
 - [Software Foundations 2: Programming Language Foundations](https://softwarefoundations.cis.upenn.edu/plf-current/toc.html), Hoare.v
