@@ -9,6 +9,11 @@ Both by Benjamin C. Pierce, et al. 2021.
 The base of this code has been taken directly from these files,
     and some code has been taken and edited to fit our project.
 All additions and edits to the code has been by, or in coorporation with, ITU associate professor Alessandro Bruni.
+The project has been supervised by course teacher Jesper Bengtson.
+
+Code comments are provided to indicate authorship of the code.
+  'Edited' mean code taken and edited from the books,
+  no comment means code taken directly from the book.
 *)
 
 
@@ -20,14 +25,15 @@ From Coq Require Import Arith.EqNat. Import Nat.
 From Coq Require Import Lia.
 From Coq Require Import Lists.List. Import ListNotations.
 From Coq Require Import Strings.String.
-
-(*Our imports*)
 From mathcomp.ssreflect Require Import all_ssreflect.
 From mathcomp Require Import finmap.
 From infotheo Require Import fsdist proba.
 Require Import Reals.
 
+(*Added by Alessandro*)
 Definition var := ordinal 64.
+
+(*Edited by Alessandro*)
 Definition state := {ffun var -> nat}.
 
 
@@ -38,11 +44,6 @@ Inductive aexp : Type :=
   | AMinus (a1 a2 : aexp)
   | AMult (a1 a2 : aexp).
 
-
-Definition X: var := inord 0.
-Definition Y: var := inord 1.
-Definition Z: var := inord 2.
-Definition W: var := inord 3.
 
 Inductive bexp : Type :=
   | BTrue
@@ -100,8 +101,10 @@ Fixpoint beval (st : state) (b : bexp) : bool :=
   | <{b1 && b2}> => andb (beval st b1) (beval st b2)
   end.
 
+(*Edited by Alessandro*)
 Definition t_empty v : state := [ffun x => v].
 
+(*Edited by Alessandro*)
 Definition t_update st i v : state :=
   [ffun x => if i == x then v else st x].
 
@@ -111,6 +114,7 @@ Notation "'_' '!->' v " := (t_empty v)
 Notation "x '!->' v ';' m" := (t_update m x v)
   (at level 100, v at next level, right associativity).
 
+(*Edited and proved by Alessandro*)
 Lemma t_apply_empty : forall x v,
 (_ !-> v) x = v.
 Proof.
@@ -119,6 +123,7 @@ rewrite /t_empty=> /=.
 by rewrite ffunE.
 Qed.
 
+(*Edited by Alessandro*)
 Inductive com : Type :=
   | CSkip
   | CAsgn (x : var) (a : aexp)
@@ -140,22 +145,29 @@ Notation "'if' x 'then' y 'else' z 'end'" :=
     (CIf x y z)
       (in custom com at level 89, x at level 99,
        y at level 99, z at level 99) : com_scope.
+
+
+(*Added by Alessandro*)
 Notation "c1 '[+' p ']' c2" := (CPlus p c1 c2) 
        (in custom com at level 90, p at level 85, right associativity) : com_scope.
 
+(*Added by Alessandro*)
 Fixpoint sample x a1 as_ := 
   match as_ with
   | [] => (<{x := a1}>)
   | (a2::as__) => <{ x := a1 [+ (Reals_ext.probdivRnnm 1 (List.length as_))] (sample x a2 as__)}>
   end.
 
+(*Added by Alessandro*) 
 Notation "x '$=' { a1 ; a2 ; .. ; an }" := (sample x a1 (cons a2 .. (cons an nil) ..))
   (in custom com at level 0, x constr at level 0,
   a1 at level 85, a2 at level 85, an at level 85, no associativity) : com_scope.
 
+(*Added by Alessandro in collaboration w. group*)
 Definition half : Reals_ext.Prob.t := Reals_ext.probdivRnnm 1 2.
 
 
+(*Edited by group in collaboration w. Alessandro*)
 Fixpoint ceval (st : state) (c : com) :=
   match c with
   | <{ skip }> => FSDist1.d st
@@ -169,8 +181,6 @@ Fixpoint ceval (st : state) (c : com) :=
         else ceval st c2
   | <{ c1 [+ p] c2}> => ConvFSDist.d p (ceval st c1) (ceval st c2)
   end.
-
-
 
 
 
@@ -220,9 +230,13 @@ Notation "a * b" := (fun st => mkAexp a st * mkAexp b st) : assertion_scope.
 
 (* ################## HOARE QUADRUPLES ################# *)
 
+(*Added by Alessandro*)
 Local Open Scope proba_scope.
+
+(*Added by Alessandro*)
 Local Open Scope com_scope.
 
+(*Added by group in collaboration with Alessandro, under supervision from Jesper*)
 Definition hoare_quad
             (P : Assertion) (c : com) (Q : Assertion) (d : R) : Prop :=
     forall st,
@@ -232,6 +246,8 @@ Definition hoare_quad
         (forall st', st' \in s <-> Q (fsval st')) ->
         Pr (fdist_of_Dist dst') s = d.
 
+
+(*Added by group in collaboration with Alessandro*)
 Theorem test_skip: forall P,
 hoare_quad P CSkip P 1.
 Proof.
@@ -242,12 +258,12 @@ rewrite /hoare_quad.
     (*apply HPst in HQs.*) Admitted.
 
 
+(*Added by group under supervision from Jesper*)
 Theorem test_seq : forall P Q R d1 d2 c1 c2,
     hoare_quad Q c2 R d1 ->
     hoare_quad P c1 Q d2 ->
     hoare_quad P (CSeq c1 c2) R (d1 * d2).
 Proof. Admitted.
-
 
 
 Definition bassn b : Assertion :=
@@ -258,19 +274,21 @@ Coercion bassn : bexp >-> Assertion.
 Arguments bassn /.
 
 
+(*Added by group under supervision from Jesper*)
 Theorem test_if : forall P Q (b: bexp) d c1 c2,
   hoare_quad (P /\ bassn b) c1 Q d ->
   hoare_quad (P /\ ~b) c2 Q d ->
   hoare_quad P (CIf b c1 c2) Q d.
 Proof. Admitted.
 
-
+(*Added by group under supervision from Jesper (does not compile)*)
 (*Theorem test_plus : forall P Q c1 c2 p,
   hoare_quad P c1 Q p ->
   hoare_quad P c2 Q (1-p) ->
   hoare_quad P (CPlus p c1 c2) Q.*)
 
 
+(*Made by group*)
 Lemma twoCoins : forall x y,
 hoare_quad
     BTrue
