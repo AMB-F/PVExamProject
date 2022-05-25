@@ -1,14 +1,14 @@
 (*
 REFERENCES:
 The code contained in this file is heavily based on the code from
-    - "Software Foundations 1: Logical Foundations, Imp.v"
+    - "Software Foundations 1: Logical Foundations, Imp.v. Maps.v"
         "https://softwarefoundations.cis.upenn.edu/lf-current/Imp.html"
     - "Software Foundations 2: Programming Language Foundations, Hoare.v"
         "https://softwarefoundations.cis.upenn.edu/plf-current/Hoare.html"
 Both by Benjamin C. Pierce, et al. 2021.
 The base of this code has been taken directly from these files,
     and some code has been taken and edited to fit our project.
-Some other additions to the code has been made by ITU associate professor Alessandro Bruni.
+All additions and edits to the code has been by, or in coorporation with, ITU associate professor Alessandro Bruni.
 *)
 
 
@@ -21,12 +21,15 @@ From Coq Require Import Lia.
 From Coq Require Import Lists.List. Import ListNotations.
 From Coq Require Import Strings.String.
 
+(*Our imports*)
 From mathcomp.ssreflect Require Import all_ssreflect.
 From mathcomp Require Import finmap.
 From infotheo Require Import fsdist proba.
 Require Import Reals.
 
 Definition var := ordinal 64.
+Definition state := {ffun var -> nat}.
+
 
 Inductive aexp : Type :=
   | ANum (n : nat)
@@ -50,7 +53,6 @@ Inductive bexp : Type :=
   | BAnd (b1 b2 : bexp).
 
 
-
 Coercion AId : var >-> aexp.
 Coercion ANum : nat >-> aexp.
 
@@ -66,7 +68,6 @@ Notation "f x .. y" := (.. (f x) .. y)
 Notation "x + y" := (APlus x y) (in custom com at level 50, left associativity).
 Notation "x - y" := (AMinus x y) (in custom com at level 50, left associativity).
 Notation "x * y" := (AMult x y) (in custom com at level 40, left associativity).
-(* TODO: fix. Notation "[ a_1 .. a_n ]" := [ a_1 .. a_n ]. *)
 Notation "'true'"  := true (at level 1).
 Notation "'true'"  := BTrue (in custom com at level 0).
 Notation "'false'"  := false (at level 1).
@@ -78,8 +79,6 @@ Notation "'~' b"  := (BNot b) (in custom com at level 75, right associativity).
 
 Open Scope com_scope.
 
-
-Definition state := {ffun var -> nat}.
 
 Fixpoint aeval (st : state) (a : aexp) : nat :=
   match a with
@@ -181,14 +180,6 @@ Definition assert_implies (P Q : Assertion) : Prop :=
     forall st, P st -> Q st.
 
 
-Declare Scope hoare_spec_scope.
-Notation "P ->> Q" := (assert_implies P Q)
-                        (at level 80) : hoare_spec_scope.
-Open Scope hoare_spec_scope.
-
-Notation "P <<->> Q" :=
-(P ->> Q /\ Q ->> P) (at level 80) : hoare_spec_scope.
-
 Definition Aexp : Type := state -> nat.
 
 Definition assert_of_Prop (P : Prop) : Assertion := fun _ => P.
@@ -248,7 +239,7 @@ move => P /=.
 rewrite /hoare_quad.
     move => st HPst s HQs //.
     rewrite /FSDist1.d /FSDist1.f.
-    apply HPst in HQs. Admitted.
+    (*apply HPst in HQs.*) Admitted.
 
 
 Theorem test_seq : forall P Q R d1 d2 c1 c2,
