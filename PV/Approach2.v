@@ -17,18 +17,14 @@ Code comments are provided to indicate authorship of the code.
 *)
 
 
-
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 
 From mathcomp.ssreflect Require Import all_ssreflect.
-From infotheo Require Import convex fsdist Reals_ext ssrR proba fdist.
-From mathcomp Require Import finmap choice Rstruct.
+From infotheo Require Import convex fsdist Reals_ext ssrR proba .
+From mathcomp Require Import finmap Rstruct.
 Require Import Nat Reals List.
-Require Import Program.
 Open Scope R_scope.
-Open Scope bool_scope.
 Open Scope nat_scope.
-Open Scope list_scope.
 Open Scope proba_scope.
 Open Scope convex_scope.
 
@@ -45,12 +41,11 @@ Inductive aexp : Type :=
   | AMinus (a1 a2 : aexp)
   | AMult (a1 a2 : aexp).
 
-(*Definition X: var := inord 0.
+Definition X: var := inord 0.
 Definition Y: var := inord 1.
-Definition Z: var := inord 2.
-Definition W: var := inord 3.*)
 
-(*Made by group in collaboration w. Alessandro*)
+
+(*Added by group in collaboration w. Alessandro*)
 Definition one_aexp := ANum 1.
 Definition two_aexp := ANum 2.
 Definition three_aexp := ANum 3.
@@ -65,7 +60,6 @@ Inductive bexp : Type :=
 
 Coercion AId : var >-> aexp.
 Coercion ANum : nat >-> aexp.
-
 
 Declare Custom Entry com.
 Declare Scope com_scope.
@@ -90,7 +84,6 @@ Notation "'~' b"  := (BNot b) (in custom com at level 75, right associativity).
 
 Open Scope com_scope.
 
-
 Fixpoint aeval (st : state) (a : aexp) : nat :=
   match a with
   | ANum n => n
@@ -99,7 +92,6 @@ Fixpoint aeval (st : state) (a : aexp) : nat :=
   | <{a1 - a2}> => (aeval st a1) - (aeval st a2)
   | <{a1 * a2}> => (aeval st a1) * (aeval st a2)
   end.
-
 
 Fixpoint beval (st : state) (b : bexp) : bool :=
   match b with
@@ -196,7 +188,7 @@ Fixpoint ceval (st : state) (c : com) : {dist state} :=
   end.
 
 
-(* Hoare triples *)
+(* ####### HOARE TRIPLE ####### *)
 
 (*Edited by Alessandro*)
 Definition Assertion := {dist state} -> bool.
@@ -214,7 +206,7 @@ Notation "{{ P }}  c  {{ Q }}" :=
 (*Added by Alessandro*)    
 Open Scope proba_scope.
 
-(* ###### HOARE RULES ###### *)
+(* ####### HOARE RULES ####### *)
 
 (*Added by Alessandro*)
 Definition conva : Assertion -> Assertion -> prob -> Assertion.

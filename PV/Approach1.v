@@ -18,13 +18,7 @@ Code comments are provided to indicate authorship of the code.
 
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
-From Coq Require Import Bool.Bool.
-From Coq Require Import Init.Nat.
-From Coq Require Import Arith.Arith.
-From Coq Require Import Arith.EqNat. Import Nat.
-From Coq Require Import Lia.
 From Coq Require Import Lists.List. Import ListNotations.
-From Coq Require Import Strings.String.
 From mathcomp.ssreflect Require Import all_ssreflect.
 From mathcomp Require Import finmap.
 From infotheo Require Import fsdist proba.
@@ -44,7 +38,6 @@ Inductive aexp : Type :=
   | AMinus (a1 a2 : aexp)
   | AMult (a1 a2 : aexp).
 
-
 Inductive bexp : Type :=
   | BTrue
   | BFalse
@@ -52,7 +45,6 @@ Inductive bexp : Type :=
   | BLe (a1 a2 : aexp)
   | BNot (b : bexp)
   | BAnd (b1 b2 : bexp).
-
 
 Coercion AId : var >-> aexp.
 Coercion ANum : nat >-> aexp.
@@ -79,7 +71,6 @@ Notation "x && y" := (BAnd x y) (in custom com at level 80, left associativity).
 Notation "'~' b"  := (BNot b) (in custom com at level 75, right associativity).
 
 Open Scope com_scope.
-
 
 Fixpoint aeval (st : state) (a : aexp) : nat :=
   match a with
@@ -166,7 +157,6 @@ Notation "x '$=' { a1 ; a2 ; .. ; an }" := (sample x a1 (cons a2 .. (cons an nil
 (*Added by Alessandro in collaboration w. group*)
 Definition half : Reals_ext.Prob.t := Reals_ext.probdivRnnm 1 2.
 
-
 (*Edited by group in collaboration w. Alessandro*)
 Fixpoint ceval (st : state) (c : com) :=
   match c with
@@ -183,19 +173,16 @@ Fixpoint ceval (st : state) (c : com) :=
   end.
 
 
-
 Definition Assertion := state -> Prop.
 
 Definition assert_implies (P Q : Assertion) : Prop :=
     forall st, P st -> Q st.
-
 
 Definition Aexp : Type := state -> nat.
 
 Definition assert_of_Prop (P : Prop) : Assertion := fun _ => P.
 Definition Aexp_of_nat (n : nat) : Aexp := fun _ => n.
 Definition Aexp_of_aexp (a : aexp) : Aexp := fun st => aeval st a.
-
 
 Coercion assert_of_Prop : Sortclass >-> Assertion.
 Coercion Aexp_of_nat : nat >-> Aexp.
@@ -228,7 +215,7 @@ Notation "a - b" := (fun st => mkAexp a st - mkAexp b st) : assertion_scope.
 Notation "a * b" := (fun st => mkAexp a st * mkAexp b st) : assertion_scope.
 
 
-(* ################## HOARE QUADRUPLES ################# *)
+(* ####### HOARE QUADRUPLE ####### *)
 
 (*Added by Alessandro*)
 Local Open Scope proba_scope.
@@ -288,7 +275,7 @@ Proof. Admitted.
   hoare_quad P (CPlus p c1 c2) Q.*)
 
 
-(*Made by group*)
+(*Added by group*)
 Lemma twoCoins : forall x y,
 hoare_quad
     BTrue
